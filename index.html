@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Story</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a1a2e;
+            font-family: 'Comic Sans MS', 'Chalkboard', cursive;
+        }
+
+        /* THE BOX - This is the root, it never moves */
+        #viewer {
+            position: fixed;
+            top: 5vh;
+            left: 5vw;
+            width: 90vw;
+            height: 90vh;
+            background: #111;
+            border: 4px solid #000;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        /* Images inside the box */
+        #viewer img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #viewer img.active {
+            opacity: 1;
+        }
+
+        /* Page indicator */
+        #pageIndicator {
+            position: fixed;
+            bottom: 2vh;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* Inventory Section */
+        #inventory {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        #inventory.active {
+            display: flex;
+        }
+
+        #inventory h1 {
+            font-size: 36px;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        #inventory p {
+            font-size: 18px;
+            color: #aaa;
+            margin-bottom: 40px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .inventory-item {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.1);
+            border: 3px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .inventory-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.05);
+        }
+
+        .inventory-item .mystery {
+            font-size: 50px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .inventory-item .revealed-content {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .inventory-item.revealed .mystery {
+            display: none;
+        }
+
+        .inventory-item.revealed .revealed-content {
+            display: flex;
+        }
+
+        .inventory-item img {
+            max-width: 80%;
+            max-height: 60%;
+            object-fit: contain;
+        }
+
+        .inventory-item .label {
+            color: white;
+            font-size: 12px;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .back-button {
+            margin-top: 40px;
+            padding: 12px 30px;
+            background: #ffd700;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background: #ffed4a;
+        }
+    </style>
+</head>
+<body>
+    <!-- THE BOX - Contains all comic images -->
+    <div id="viewer"></div>
+    
+    <!-- Page indicator -->
+    <div id="pageIndicator">0 / 14</div>
+
+    <!-- Inventory overlay -->
+    <div id="inventory">
+        <h1>✨ Our Memories ✨</h1>
+        <p>The treasures from our journey together</p>
+        <div class="inventory-grid" id="inventoryGrid"></div>
+        <button class="back-button" onclick="hideInventory()">← Back to Story</button>
+    </div>
+
+    <script>
+        const TOTAL_PANELS = 15;
+        let currentPanel = 0;
+
+        const inventoryItems = [
+            { image: 'inventory/1.png', label: 'Sauce' },
+            { image: 'inventory/2.png', label: 'Jellycat' },
+            { image: 'inventory/3.png', label: 'Boxers' },
+            { image: 'inventory/4.png', label: 'Raccoon' },
+            { image: 'inventory/5.png', label: 'Bear' },
+            { image: 'inventory/6.png', label: 'Manual Car' },
+            { image: 'inventory/7.png', label: 'Seton' },
+            { image: 'inventory/8.png', label: 'Nails' },
+        ];
+
+        // Initialize
+        function init() {
+            const viewer = document.getElementById('viewer');
+            
+            // Create all images upfront (0.png through 14.png)
+            for (let i = 0; i <= 14; i++) {
+                const img = document.createElement('img');
+                img.src = `${i}.png`;
+                img.alt = `Panel ${i}`;
+                if (i === 0) img.classList.add('active');
+                viewer.appendChild(img);
+            }
+
+            // Build inventory
+            const grid = document.getElementById('inventoryGrid');
+            inventoryItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'inventory-item';
+                div.innerHTML = `
+                    <span class="mystery">?</span>
+                    <div class="revealed-content">
+                        <img src="${item.image}" alt="${item.label}">
+                        <span class="label">${item.label}</span>
+                    </div>
+                `;
+                div.onclick = () => div.classList.add('revealed');
+                grid.appendChild(div);
+            });
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                }
+                if (e.key === 'ArrowLeft') navigate(-1);
+                if (e.key === 'ArrowRight') navigate(1);
+                if (e.key === 'Escape') hideInventory();
+            });
+        }
+
+        function navigate(dir) {
+            const newPanel = currentPanel + dir;
+            
+            // If going past last panel (14), show inventory
+            if (newPanel > 14) {
+                showInventory();
+                return;
+            }
+            
+            if (newPanel < 0) return;
+            
+            // Hide current, show new
+            const images = document.querySelectorAll('#viewer img');
+            images[currentPanel].classList.remove('active');
+            images[newPanel].classList.add('active');
+            
+            currentPanel = newPanel;
+            document.getElementById('pageIndicator').textContent = `${currentPanel} / 14`;
+        }
+
+        function showInventory() {
+            document.getElementById('inventory').classList.add('active');
+        }
+
+        function hideInventory() {
+            document.getElementById('inventory').classList.remove('active');
+        }
+
+        init();
+    </script>
+</body>
+</html>

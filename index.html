@@ -188,24 +188,24 @@
         let currentPanel = 0;
 
         const inventoryItems = [
-            { image: 'inventory/1.png', label: 'Sauce' },
-            { image: 'inventory/2.png', label: 'Jellycat' },
-            { image: 'inventory/3.png', label: 'Boxers' },
-            { image: 'inventory/4.png', label: 'Raccoon' },
-            { image: 'inventory/5.png', label: 'Bear' },
-            { image: 'inventory/6.png', label: 'Manual Car' },
-            { image: 'inventory/7.png', label: 'Seton' },
-            { image: 'inventory/8.png', label: 'Nails' },
+            { image: 'inventory/1.jpg', label: 'Sauce' },
+            { image: 'inventory/2.jpg', label: 'Jellycat' },
+            { image: 'inventory/3.jpg', label: 'Boxers' },
+            { image: 'inventory/4.jpg', label: 'Raccoon' },
+            { image: 'inventory/5.jpg', label: 'Bear' },
+            { image: 'inventory/6.jpg', label: 'Manual Car' },
+            { image: 'inventory/7.jpg', label: 'Seton' },
+            { image: 'inventory/8.jpg', label: 'Nails' },
         ];
 
         // Initialize
         function init() {
             const viewer = document.getElementById('viewer');
             
-            // Create all images upfront (0.png through 14.png)
+            // Create all images upfront (0.jpg through 14.jpg)
             for (let i = 0; i <= 14; i++) {
                 const img = document.createElement('img');
-                img.src = `${i}.png`;
+                img.src = `${i}.jpg`;
                 img.alt = `Panel ${i}`;
                 if (i === 0) img.classList.add('active');
                 viewer.appendChild(img);
@@ -235,6 +235,21 @@
                 if (e.key === 'ArrowLeft') navigate(-1);
                 if (e.key === 'ArrowRight') navigate(1);
                 if (e.key === 'Escape') hideInventory();
+            });
+
+            // Click/tap navigation for mobile
+            viewer.addEventListener('click', (e) => {
+                const rect = viewer.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const halfWidth = rect.width / 2;
+                
+                if (clickX < halfWidth) {
+                    // Clicked on left half - go to previous page
+                    navigate(-1);
+                } else {
+                    // Clicked on right half - go to next page
+                    navigate(1);
+                }
             });
         }
 
